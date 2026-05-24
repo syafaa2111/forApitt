@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>THIS FOR U</title>
+    <link href="https://fonts.googleapis.com/css2?family=Schoolbell&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: #050d1a;
+            font-family: 'Schoolbell', cursive;
+            overflow: hidden;
+        }
+
+        #starCanvas {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+        }
+
+        .screen {
+            display: none; position: fixed; inset: 0; z-index: 1;
+            justify-content: center; align-items: center; flex-direction: column;
+        }
+        .active { display: flex; animation: fadeIn 1s ease; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+        /* ===== S1 ===== */
+        #s1 {
+            text-align: center; gap: 16px; position: relative;
+            justify-content: center; align-items: center;
+            padding-top: 5vh;
+        }
+
+        .bubble-title {
+            font-family: 'Schoolbell', cursive;
+            font-size: clamp(1.6rem, 4vw, 2.6rem);
+            color: #e8f4ff;
+            text-shadow: 0 0 20px rgba(168,210,255,0.5), 0 0 40px rgba(168,210,255,0.2);
+            line-height: 1.1;
+        }
+        .bubble-sub {
+            font-family: 'Schoolbell', cursive;
+            font-size: clamp(1.2rem, 3.5vw, 1.7rem); color: #c8e8ff;
+        }
+
+        /* Main clickable sticker */
+        .clickable {
+            cursor: pointer;
+            filter: drop-shadow(0 6px 18px rgba(120,160,255,0.5));
+            transition: transform 0.3s, filter 0.3s;
+            animation: floatMain 3s ease-in-out infinite;
+        }
+        .clickable:hover { transform: scale(1.1) translateY(-8px) !important; filter: drop-shadow(0 14px 30px rgba(180,140,255,0.9)); }
+        @keyframes floatMain { 0%,100%{transform:translateY(0) rotate(0deg);} 50%{transform:translateY(-14px) rotate(1deg);} }
+
+        .click-hint {
+            font-family: 'Schoolbell', cursive;
+            font-size: 1.1rem; color: #aad4ff; opacity: 0.7; letter-spacing: 2px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:0.4;} 50%{opacity:1;} }
+
+        @keyframes floatA {
+            0%,100%{ transform: translateY(0) rotate(-5deg); }
+            50%{ transform: translateY(-12px) rotate(3deg); }
+        }
+        @keyframes floatB {
+            0%,100%{ transform: translateY(0) rotate(4deg); }
+            50%{ transform: translateY(-10px) rotate(-3deg); }
+        }
+        @keyframes floatC {
+            0%,100%{ transform: translateY(0) rotate(-3deg); }
+            33%{ transform: translateY(-8px) rotate(2deg); }
+            66%{ transform: translateY(-15px) rotate(-5deg); }
+        }
+
+        /* scrapbook stickers — outside the mosaic, hugging the window edges */
+        .scrapbook { position: relative; }
+        .sc-stk {
+            position: fixed;
+            pointer-events: none;
+            user-select: none;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+            z-index: 5;
+        }
+        .sc-stk img { display: block; }
+        /* left edge, vertically spread */
+        .sc-stk.sk1 { top: 6vh;  left: 10px; animation: floatA 4s ease-in-out infinite; }
+        .sc-stk.sk2 { top: 42vh; left: 10px; animation: floatC 5s ease-in-out infinite 0.6s; }
+        /* right edge, vertically spread */
+        .sc-stk.sk3 { top: 18vh; right: 10px; animation: floatB 3.6s ease-in-out infinite 0.4s; }
+        .sc-stk.sk4 { top: 58vh; right: 10px; animation: floatA 4.3s ease-in-out infinite 0.2s; }
+
+        /* note sticker at bottom — bigger */
+        .note-sticker {
+            display: block;
+            margin: 22px auto 0;
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.2));
+            animation: floatB 3.5s ease-in-out infinite;
+        }
+
+        /* ===== S2 ===== */
+        #s2 { gap: 28px; }
+        .envelope-hint { font-family:'Schoolbell',cursive; font-size:1.6rem; color:#c8e8ff; }
+
+        /* ===== S3 SCRAPBOOK ===== */
+        #s3 {
+            display: none; position: fixed; inset: 0; z-index: 1;
+            overflow-y: auto; overflow-x: hidden;
+        }
+        #s3.active { display: block; animation: fadeIn 1s ease; }
+
+        .scrapbook {
+            width: 100%; min-height: 100vh;
+            padding: 28px 28px 90px 28px;
+            max-width: 980px; margin: 0 auto;
+        }
+
+        /* ===== MOSAIC ===== */
+        .mosaic {
+            display: grid;
+            grid-template-columns: 200px 1fr 1fr 200px;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .card { position: relative; cursor: default; transition: transform 0.3s; }
+        .card:hover { transform: scale(1.04) rotate(0deg) !important; z-index: 20; }
+
+        /* Polaroid */
+        .card.pol {
+            background: #f5f0e8;
+            padding: 8px 8px 34px 8px;
+            box-shadow: 0 6px 22px rgba(0,0,0,0.55);
+        }
+        .card.pol img { width:100%; aspect-ratio:4/3; object-fit:cover; display:block; }
+        .card.pol.sq img { aspect-ratio:1/1; }
+        .card.pol .cap {
+            font-family:'Schoolbell',cursive; font-size:0.78rem;
+            color:#333; text-align:center; padding:5px 3px 0; line-height:1.3;
+        }
+
+        /* Stamp */
+        .card.stmp {
+            background: #f5f0e8;
+            padding: 7px; outline: 4px dashed #c8b89a; outline-offset: -9px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.45);
+        }
+        .card.stmp img { width:100%; aspect-ratio:1/1; object-fit:cover; display:block; }
+        .card.stmp .cap {
+            font-family:'Schoolbell',cursive; font-size:0.78rem;
+            color:#c8e8ff; text-align:center; padding:6px 3px 0; line-height:1.3;
+        }
+
+        /* Text card */
+        .card.txt {
+            background: transparent; box-shadow: none; padding: 6px 4px;
+        }
+        .card.txt p {
+            font-family:'Schoolbell',cursive;
+            font-size: clamp(0.82rem, 1.5vw, 0.96rem);
+            color: #c8e8ff; line-height: 1.7;
+        }
+
+        /* col spans */
+        .c2 { grid-column: span 2; }
+        .c3 { grid-column: span 3; }
+        .c4 { grid-column: span 4; }
+
+        /* rotations */
+        .r1 { transform: rotate(-2.5deg); }
+        .r2 { transform: rotate(2deg); }
+        .r3 { transform: rotate(-1.5deg); }
+        .r4 { transform: rotate(1.2deg); }
+        .r5 { transform: rotate(-3deg); }
+        .r6 { transform: rotate(3deg); }
+
+        /* bottom text */
+        .bottom-note {
+            font-family:'Schoolbell',cursive;
+            font-size:clamp(0.88rem,1.8vw,1.02rem);
+            color:#aad4ff; text-align:center;
+            padding: 18px 20px 10px; opacity:0.75;
+        }
+
+        /* Open note button */
+        .open-note-btn {
+            display: block; margin: 28px auto 0;
+            font-family: 'Schoolbell', cursive;
+            font-size: 1.15rem; color: #ffd96a;
+            background: transparent; border: 2px dashed #ffd96a;
+            padding: 10px 28px; cursor: pointer; letter-spacing: 1px;
+            transition: background 0.2s, color 0.2s;
+            animation: pulse 2.5s ease-in-out infinite;
+        }
+        .open-note-btn:hover { background: rgba(255,217,106,0.12); color: #fff; }
+
+        /* ===== NOTE POPUP ===== */
+        .note-overlay {
+            display: none; position: fixed; inset: 0; z-index: 50;
+            background: rgba(5,13,26,0.82);
+            justify-content: center; align-items: center;
+        }
+        .note-overlay.show { display: flex; animation: fadeIn 0.5s ease; }
+
+        .note-paper {
+            background: #fdf9ee;
+            width: min(92vw, 520px); max-height: 82vh;
+            overflow-y: auto; padding: 36px 36px 36px 52px;
+            position: relative;
+            box-shadow: 0 16px 60px rgba(0,0,0,0.6), 0 0 0 1px #e8dfc0;
+            background-image: linear-gradient(#e8dfc0 1px, transparent 1px);
+            background-size: 100% 2.1em; background-position: 0 2.4em;
+        }
+        .note-paper::before {
+            content: ''; position: absolute; top:0; left:44px; bottom:0; width:2px;
+            background: rgba(220,100,100,0.28);
+        }
+        .note-close {
+            position: absolute; top:10px; right:14px;
+            font-family:'Schoolbell',cursive; font-size:1.3rem;
+            color:#888; cursor:pointer; background:none; border:none;
+        }
+        .note-close:hover { color:#333; }
+        .note-title {
+            font-family:'Schoolbell',cursive; font-size:1.45rem; color:#3a2a10;
+            margin-bottom:16px; text-align:center;
+        }
+        #note-text {
+            font-family:'Schoolbell',cursive; font-size:1.08rem; color:#2a1a08;
+            line-height:2.1em; white-space: pre-wrap;
+        }
+        .note-paper::-webkit-scrollbar { width: 6px; }
+        .note-paper::-webkit-scrollbar-thumb { background: #c8b89a; border-radius: 4px; }
+
+        @media (max-width:640px) {
+            .mosaic { grid-template-columns: 1fr 1fr; gap: 12px; }
+            .c2 { grid-column: span 2; }
+            .c3 { grid-column: span 2; }
+            .c4 { grid-column: span 2; }
+        }
+    </style>
+</head>
+<body>
+<canvas id="starCanvas"></canvas>
+
+<!-- S1 -->
+<div id="s1" class="screen active">
+    <div class="bubble-title">THIS FOR U ✨</div>
+    <img src="stiker copy.png"
+         class="clickable" width="260" onclick="next(2)"
+         onerror="this.outerHTML='<div class=\'clickable\' style=\'font-size:10rem;cursor:pointer;\' onclick=\'next(2)\'>🫂</div>'">
+    <div class="bubble-sub">i have something for u...</div>
+    <div class="click-hint">✦ click first✦</div>
+</div>
+
+<!-- S2 -->
+<div id="s2" class="screen">
+    <div class="envelope-hint">Open here...</div>
+    <img src="amplop (2).png"
+         class="clickable" width="300" onclick="next(3)"
+         onerror="this.outerHTML='<div class=\'clickable\' style=\'font-size:8rem;cursor:pointer;\' onclick=\'next(3)\'>📩</div>'">
+</div>
+
+<!-- S3 SCRAPBOOK -->
+<div id="s3" class="screen">
+  <div class="scrapbook">
+
+    <!-- Floating stickers di scrapbook -->
+    <div class="sc-stk sk1"><img src="stiker1.png" width="250" onerror="this.style.display='none'"></div>
+    <div class="sc-stk sk2"><img src="stiker2.png" width="250" onerror="this.style.display='none'"></div>
+    <div class="sc-stk sk3"><img src="stiker3.png" width="250" onerror="this.style.display='none'"></div>
+    <div class="sc-stk sk4"><img src="stiker4.png" width="250" onerror="this.style.display='none'"></div>
+
+    <div class="mosaic">
+
+      <!-- ROW 1 -->
+      <!-- col 1: text -->
+      <div class="card txt r5">
+        <p id="txt1"></p>
+      </div>
+
+      <!-- col 2-3: big landscape polaroid -->
+      <div class="card pol c2 r2">
+        <img src="foto1.jpg"
+             onerror="this.style.display='none';this.parentElement.style.minHeight='150px';this.parentElement.style.background='#1a2535';">
+        <div class="cap" id="cap1"></div>
+      </div>
+
+      <!-- col 4: stamp -->
+      <div class="card stmp sq r3">
+        <img src="foto2.jpg"
+             onerror="this.style.display='none';this.parentElement.style.background='#1a2535';">
+        <div class="cap" id="cap2"></div>
+      </div>
+
+      <!-- ROW 2 -->
+      <!-- col 1: small sq polaroid -->
+      <div class="card pol sq r4">
+        <img src="foto3.jpg"
+             onerror="this.style.display='none';this.parentElement.style.background='#1a2535';">
+        <div class="cap" id="cap3"></div>
+      </div>
+
+      <!-- col 2-3: landscape polaroid -->
+      <div class="card pol c2 r1">
+        <img src="foto4.jpeg"
+             onerror="this.style.display='none';this.parentElement.style.background='#1a2535';">
+        <div class="cap" id="cap4"></div>
+      </div>
+
+      <!-- col 4: text -->
+      <div class="card txt r6">
+        <p id="txt2"></p>
+      </div>
+
+      <!-- ROW 3 -->
+      <!-- col 1: stamp -->
+      <div class="card stmp r2">
+        <img src="foto5.jpeg"
+             onerror="this.style.display='none';this.parentElement.style.background='#1a2535';">
+        <div class="cap" id="cap5"></div>
+      </div>
+
+      <!-- col 2: text -->
+      <div class="card txt r5">
+        <p id="txt3"></p>
+      </div>
+
+      <!-- col 3-4: landscape polaroid -->
+      <div class="card pol c2 r3">
+        <img src="foto6.jpeg"
+             onerror="this.style.display='none';this.parentElement.style.background='#1a2535';">
+        <div class="cap" id="cap6"></div>
+      </div>
+
+      <!-- ROW 4: bottom note full width -->
+      <div class="card c4" style="background:transparent;box-shadow:none;padding:4px 0;">
+        <div class="bottom-note" id="bottom-note"></div>
+        <button class="open-note-btn" id="noteBtn" style="opacity:0;pointer-events:none;" onclick="openNote()">
+          Another click...
+        </button>
+      </div>
+
+    </div><!-- end mosaic -->
+  </div>
+</div>
+
+<!-- NOTE POPUP -->
+<div class="note-overlay" id="noteOverlay">
+  <div class="note-paper">
+    <button class="note-close" onclick="closeNote()">✕</button>
+    <div class="note-title">This For You —</div>
+    <div id="note-text"></div>
+    <img src="stiker5.png" class="note-sticker" width="130"
+         onerror="this.style.display='none'">
+  </div>
+</div>
+
+<script>
+// ===== STARS =====
+(function(){
+    const canvas=document.getElementById('starCanvas'),ctx=canvas.getContext('2d');
+    const COLORS=['#ffffff','#a8edff','#c9b8ff','#ffb3d9','#ffd96a','#b3ffd9','#ff9ecd','#90d4ff'];
+    let stars=[],W,H;
+    function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+    function createStars(n){stars=[];for(let i=0;i<n;i++){stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*2+0.3,color:COLORS[Math.floor(Math.random()*COLORS.length)],speed:Math.random()*0.35+0.05,ts:Math.random()*0.03+0.008,to:Math.random()*Math.PI*2,drift:(Math.random()-0.5)*0.12,sparkle:Math.random()<0.1});}}
+    function drawStar(s,alpha){ctx.save();ctx.globalAlpha=alpha;if(s.sparkle){ctx.translate(s.x,s.y);ctx.fillStyle=s.color;for(let a=0;a<4;a++){ctx.beginPath();ctx.ellipse(0,0,s.r*3.5,s.r*0.7,(Math.PI/4)*a*2,0,Math.PI*2);ctx.fill();}ctx.beginPath();ctx.arc(0,0,s.r*1.2,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();}else{ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=s.color;ctx.shadowColor=s.color;ctx.shadowBlur=s.r*4;ctx.fill();}ctx.restore();}
+    let frame=0;
+    function animate(){ctx.clearRect(0,0,W,H);frame++;stars.forEach(s=>{const alpha=0.4+0.6*(0.5+0.5*Math.sin(frame*s.ts+s.to));s.y+=s.speed;s.x+=s.drift;if(s.y>H+5){s.y=-5;s.x=Math.random()*W;}if(s.x<-5)s.x=W+5;if(s.x>W+5)s.x=-5;drawStar(s,alpha);});requestAnimationFrame(animate);}
+    resize();createStars(260);animate();
+    window.addEventListener('resize',()=>{resize();createStars(260);});
+})();
+
+function next(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('s'+id).classList.add('active');
+    if(id===3) initScrapbook();
+}
+
+function typeInto(elId,text,delay,speed,cb){
+    const el=document.getElementById(elId);if(!el)return;
+    el.innerHTML='';let i=0;
+    function tick(){
+        if(i<text.length){const ch=text[i];if(ch==='\n')el.innerHTML+='<br>';else el.innerHTML+=ch;i++;setTimeout(tick,speed+(ch==='.'||ch===','?55:0));}
+        else{if(cb)cb();}
+    }
+    setTimeout(tick,delay);
+}
+
+function initScrapbook(){
+    typeInto('cap1','what a week',600,20);
+    typeInto('cap2','us, always 📷',800,20);
+    typeInto('cap3','no caption needed lol',1000,20);
+    typeInto('cap4','had to document',1200,20);
+    typeInto('cap5','simple joys',1400,20);
+    typeInto('cap6','I\'m so proud of you, always',1600,20);
+
+    typeInto('txt1','Another one for the books with a real one. Grateful to have a friend who keeps it 100 all the time. Stay exactly the way you are.',400,17);
+    typeInto('txt2','We have definitely had more than our fair share of laughs lately. Its rare to find someone who is on the same wavelength. Thanks for being such a great homie.',1100,17);
+    typeInto('txt3','Always grateful for the support and the endless laughs. You are definitely a real one. Keep doing your thing, bro.',1500,17);
+
+    typeInto('bottom-note',
+        'Another day of being absolute idiots together. Never a dull moment when you are around. Thanks for being a great friend.',
+        1800, 20, ()=>{
+            const btn=document.getElementById('noteBtn');
+            btn.style.opacity='1'; btn.style.pointerEvents='auto';
+        });
+}
+
+const noteText = `For Apit,
+
+Hey. Aku tau belakangan ini berat banget. Ada momen di mana kamu ngerasa kayak udah ngasih segalanya tapi hasilnya masih jauh dari yang kamu mau — dan it's okay to feel exactly that way.
+
+But here's what I need you to know: aku bangga banget sama kamu. Bukan karena hasilnya, bukan karena nilainya, bukan karena seberapa sempurna kamu keliatan dari luar. Tapi karena kamu masih di sini. Masih berjuang. Masih mau coba lagi walau capek.
+
+Setiap langkah kecil yang kamu ambil itu nyata. Every late night, every hard decision, every time you chose to keep going instead of giving up — that counts. That matters. Itu semua bagian dari kamu yang luar biasa.
+
+I've seen you grow. Aku udah liat sendiri gimana kamu berkembang — pelan-pelan, hari demi hari. Dan percaya deh, the version of you right now, the one that's still fighting? That's already someone worth being proud of.
+
+Aku nggak minta kamu selalu kuat. Kamu nggak harus pura-pura fine kalau lagi nggak fine. Istirahat boleh, nangis boleh — tapi jangan berhenti. Take a breath, then keep going.
+
+Because I genuinely believe in you. Bukan karena aku harus bilang itu, tapi karena aku udah liat sendiri betapa kerasnya kamu berusaha.
+
+Apapun yang terjadi nanti — whatever the result may be — kamu udah menang di mataku. Karena kamu berani mencoba. Dan itu bukan hal kecil. Itu segalanya.
+
+I'm rooting for you, always. 
+
+— Thanks for the endless talks and the laughs. You're a real one.`;
+
+function openNote(){
+    document.getElementById('noteOverlay').classList.add('show');
+    const el=document.getElementById('note-text');
+    el.innerHTML=''; let i=0;
+    function tick(){
+        if(i<noteText.length){
+            const ch=noteText[i];
+            if(ch==='\n')el.innerHTML+='<br>';
+            else el.innerHTML+=ch;
+            i++;
+            setTimeout(tick,18+(ch==='.'||ch===','||ch==='—'?60:0));
+        }
+    }
+    tick();
+}
+function closeNote(){
+    document.getElementById('noteOverlay').classList.remove('show');
+}
+</script>
+</body>
+</html>
